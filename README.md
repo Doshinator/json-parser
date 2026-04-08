@@ -23,35 +23,19 @@ ws :=
     '0009' ws
 
 
-value := 
-    object
-    array
-    string
-    number
-    boolean
-    "null"
+value := object | array | string | number | boolean | "null"
 
-boolean :=
-    true
-    false
+boolean := true | false
 
-string :=
-    '"' characters '"'
+string := '"' characters '"'
 
-array := 
-    '[' ws ']' 
-    '[' elements ']'
+array := '[' ws ']' | '[' elements ']'
 
-object :=
-    '{' ws '}' 
-    '{' members '}'
+object := '{' ws '}' | '{' members '}'
 
-members :=
-    member 
-    member ',' members 
+members := member | member ',' members 
 
-member := 
-    ws string ws ':' element 
+member := ws string ws ':' element 
 
 
 ## Input
