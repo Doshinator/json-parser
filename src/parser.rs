@@ -15,12 +15,6 @@ impl Parser {
         }
     }
 
-
-    fn parse(input: &str) -> ParseResult<JsonValue> {
-        let mut parse = Parser::new(input);
-        Ok(JsonValue::Null)
-    }
-
     fn peek(&self) -> Option<char> {
         if self.position < self.input.len() {
             Some(self.input[self.position])
@@ -50,6 +44,62 @@ impl Parser {
             )),
             None => Err(ParseError::new(
                 format!("Expected '{}', found end of input", expected),
+                self.position
+            )),
+        }
+    }
+
+    fn skip_whitespace(&mut self) {
+        while let Some(ch) = self.peek() {
+            if ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t' {
+                self.next();
+            }
+            else {
+                break;
+            }
+        }
+    }
+
+    // entry point
+    // Json := element 
+    // element := ws value ws
+    pub fn parse(&mut self) -> ParseResult<JsonValue> {
+        self.skip_whitespace();
+
+        let value = self.parse_value();
+
+        self.skip_whitespace();
+
+        if self.position < self.input.len() {
+            return Err(ParseError::new(
+                "Unexpected characters after JSON value",
+                self.position,
+            ));
+        }
+
+        Ok(value)
+    }
+
+    // value := object | array | string | number | "true" | "false" | "null"
+    fn parse_value(&mut self) -> ParseResult<JsonValue> {
+        match self.peek() {
+            Some('{') => self.parse_object(),
+            Some('[') => self.parse_array(),
+            Some('"') => self.parse_string(),
+
+            Some('-') | Some('0'..'9') => self.parse_number(),
+
+            Some('t') => self.parse_true(),
+            Some('f') => self.parse_false(),
+            Some('n') => self.parse_null(),
+
+            Some(ch) => Err(ParseError::new(
+                format!("Unexpected char '{}'", ch),
+                self.position
+            )),
+
+            None => Err(ParseError::new(
+                format!("Unexpected end of input"),
                 self.position
             )),
         }
