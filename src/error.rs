@@ -26,4 +26,4 @@ impl std::error::Error for ParseError {}
 
 
 // Alias for Result<T, ParseError> 
-pub type ParseType<T> = Result<T, ParseError>;
+pub type ParseResult<T> = Result<T, ParseError>;
