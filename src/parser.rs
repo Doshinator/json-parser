@@ -60,7 +60,7 @@ impl Parser {
         }
     }
 
-    // entry point
+    // // ==================== Entry Point ====================
     // Json := element 
     // element := ws value ws
     pub fn parse(&mut self) -> ParseResult<JsonValue> {
@@ -103,5 +103,31 @@ impl Parser {
                 self.position
             )),
         }
+    }
+
+    // boolean | null
+    fn parse_true(&mut self) -> ParseResult<JsonValue> {
+        self.expect('t')?;
+        self.expect('r')?;
+        self.expect('u')?;
+        self.expect('e')?;
+        Ok(JsonValue::Bool(true))
+    }
+
+    fn parse_false(&mut self) -> ParseResult<JsonValue> {
+        self.expect('f')?;
+        self.expect('a')?;
+        self.expect('l')?;
+        self.expect('s')?;
+        self.expect('e')?;
+        Ok(JsonValue::Bool(false))
+    }
+
+    fn parse_null(&mut self) -> ParseResult<JsonValue> {
+        self.expect('n')?;
+        self.expect('u')?;
+        self.expect('l')?;
+        self.expect('l')?;
+        Ok(JsonValue::Null)
     }
 }
