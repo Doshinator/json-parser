@@ -187,4 +187,39 @@ impl Parser {
             }
         }
     }
+
+    fn parse_unicode_escape(&mut self) -> ParseResult<char> {
+        let mut hex_str = String::new();
+
+        for _ in 0..4 {
+            match self.next() {
+                Some(ch) if ch.is_ascii_hexdigit() => {
+                    hex_str.push(ch);
+                },
+                Some(ch) => {
+                    return Err(ParseError::new(
+                        format!("Expected hex digit in Unicode escape, found '{}'", ch), 
+                        self.position - 1
+                    ));
+                },
+                None => {
+                    return Err(ParseError::new(
+                        "Unexpected end of input in Unicode escape",
+                        self.position,
+                    ));
+                },
+            }
+        }
+        
+        // Can't fail - we verified all chars are hex above
+        let code = u32::from_str_radix(&hex_str, 16).unwrap();
+        
+        char::from_u32(code).ok_or_else(|| {
+            ParseError::new(
+                format!("Invalid Unicode code point: U+{:04X}", code),
+                self.position - 4,
+            )
+        })
+    }
+
 }
