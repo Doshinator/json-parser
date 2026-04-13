@@ -130,4 +130,61 @@ impl Parser {
         self.expect('l')?;
         Ok(JsonValue::Null)
     }
+
+    // ----- String parser -----
+    fn parse_string(&mut self) -> ParseResult<JsonValue> {
+        self.expect('"')?;
+
+        let mut result = String::new();
+
+        loop {
+            match self.next() {
+                Some('"') => return Ok(JsonValue::String(result)),
+                Some('\\') => {
+                    match self.next() {
+                        Some('"') => result.push('"'),
+                        Some('\\') => result.push('\\'),
+                        Some('/') => result.push('/'),
+                        Some('b') => result.push('\u{0008}'),  // backspace
+                        Some('f') => result.push('\u{000C}'),  // form feed
+                        Some('n') => result.push('\n'),
+                        Some('r') => result.push('\r'),
+                        Some('t') => result.push('\t'),
+                        Some('u') => {
+                            // Unicode escape: \uXXXX
+                            // Need to parse 4 hex digits and convert to char
+                            let ch = self.parse_unicode_escape()?;
+                            result.push(ch);
+                        },
+                        Some(ch) => {
+                            return Err(ParseError::new(
+                                format!("Invalid escape sequence '\\{}'", ch), 
+                                self.position - 1));
+                        },
+                        None => {
+                            return Err(ParseError::new(
+                                "Unexpected end of input in escape sequence",
+                                self.pos
+                            ));
+                        }
+                    }
+                },
+                Some(ch) if ch < ' ' => {
+                    return Err(ParseError::new(
+                        format!("Unescaped control character (code: {})", ch as u32),
+                        self.position - 1,
+                    ));
+                },
+                Some(ch) => {
+                    result.push(ch);
+                },
+                None => {
+                    return Err(ParseError::new(
+                        "Unexpected end of input in string",
+                        self.position
+                    ));
+                },
+            }
+        }
+    }
 }
